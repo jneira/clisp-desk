@@ -196,7 +196,50 @@
 ;;1.19 Definir un predicado que tome tres argumentos: día, mes y año,
 ;;y devuelva T si es una fecha válida.
 
+;;(FECHAP 12 12 1986) => T
+;;(FECHAP 12 30 1987) => NIL
+;;(FECHAP 31 2 1986) => NIL
+;;(FECHAP 31 11 1876) => T
+
 (defun fecha-validap (d m a)
   (and (> m 0) (<= m 12)
-       (let ((max))
-         )))
+       (> d 0)
+       (let ((max (cond
+                   ((= m 2) 28)
+                   ((evenp m) 30)
+                   (t 31))))
+        (<= d max))))
+
+;;1.20 Definir una función que devuelva cierto (T) si alguno de sus
+;;tres argumentos no es divisible por 2.
+
+(defun div2 (&rest nums)
+  (some (lambda (x) (/= (rem x 2) 0)) nums))
+
+;;1.21 Definir la función ABSOLUTO que calcula el valor
+;;absoluto de su argumento si éste es un número utilizando una
+;;estructura condicional.
+
+(defun absoluto (n)
+  (when (numberp n)
+    (if (>= 0) n (- n))))
+
+;;1.22 Definir la función MINIMO, que devuelve el mínimo de sus
+;;tres argumentos numéricos, utilizando una estructura condicional.
+
+(defun minimo (x y z)
+  (or (and (< x y) (< x z) x)
+      (and (< y x) (< y z) y)
+      z))
+
+;;1.23 Definir la función MAXIMO, que devuelve el máximo de
+;;sus tres argumentos numéricos, utilizando una estructura
+;;condicional.
+
+(defun maximo (x y z)
+  (or (and (> x y) (> x z) x)
+      (and (> y x) (> y z) y)
+      z))
+
+;;1.24 Definir, utilizando una estructura condicional, las funciones
+;;lógicas OR y AND para tres argumentos.
