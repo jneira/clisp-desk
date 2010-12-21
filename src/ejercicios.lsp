@@ -4,7 +4,7 @@
 ;; F = 1/ sqrt (ax2 + bx2 + c)
 
 (defun f.1.1 (a b c)
-  (lambda (x) (l-et ((x2 (expt x 2)))
+  (lambda (x) (let ((x2 (expt x 2)))
            (/ 1 (sqrt
                  (+ (* a x2)
                     (* b x2)
@@ -232,6 +232,12 @@
       (and (< y x) (< y z) y)
       z))
 
+(defun minimo (x y z)
+  (cond
+   ((and (< x y) (< x z)) x)
+   ((and (< y x) (< y z)) y)
+   (t z)))
+
 ;;1.23 Definir la función MAXIMO, que devuelve el máximo de
 ;;sus tres argumentos numéricos, utilizando una estructura
 ;;condicional.
@@ -241,5 +247,133 @@
       (and (> y x) (> y z) y)
       z))
 
+(defun maximo (x y z)
+  (cond
+   ((and (> x y) (> x z)) x)
+   ((and (> y x) (> y z)) y)
+   (t z)))
+
 ;;1.24 Definir, utilizando una estructura condicional, las funciones
 ;;lógicas OR y AND para tres argumentos.
+
+(defun and3 (x y z)
+  (when x (when y z)))
+
+(defun or3 (x y z)
+  (if x t (if y t z)))
+
+;;1.25 Definir de forma iterativa la función SUMA de dos números.
+
+(defun suma (x y)
+  (do ((total x (1+ total))
+       (cont y (1- cont)))
+      ((zerop cont) total)))
+
+;;1.26 Definir de forma iterativa la EXPONENCIACION de dos números
+
+(defun exponent (x y)
+  (do ((total x (* total x))
+       (exp (1- y) (1- exp)))
+      ((zerop exp) total)))
+
+;;1.27 Definir la función FACTORIAL de forma recursiva e
+;;iterativa sabiendo que el factorial de N es 1 si N es 0 y en otro
+;;caso será N veces el factorial de N-1
+
+(defun fact.rec (n)
+  (if (= n 1) 1
+    (* n (fact.rec (1- n)))))
+
+(defun fact.iter (n)
+  (do* ((num n (1- num))
+        (acc n (* acc num)))
+      ((= 1 num) acc)))
+
+;;1.28 Redefinir de forma recursiva e iterativa las funciones
+;;primitivas MEMBER, REVERSE y LENGTH.
+
+(defun member.rec (a lst)
+  (when lst
+    (or (and (equal a (car lst)) a)
+        (member.rec a (cdr lst)))))
+
+(defun member.iter (a lst)
+  (dolist (i lst) (when (= a i) (return i))))
+
+(defun reverse.rec (lst)
+  (let ((fst (list (car lst)))
+        (rst (cdr lst)))
+    (if rst (append (revertir rst) fst)
+      fst)))
+
+(defun reverse.iter (lst)
+  (dolist (i lst acc)
+    (cons i acc)))
+
+(defun length.rec (lst)
+  (if lst (1+ (length.rec (cdr lst))) 0))
+
+(defun length.iter (lst)
+  (do ((l lst (cdr lst))
+       (acc 0 (+1 acc))
+       ((null l) acc))))
+
+;;1.29 Definir una función que determine la profundidad de una
+;;lista (número máximo de paréntesis que hay que extraer para
+;;obtener un determinado elemento de la misma).
+
+(defun depth (lst)
+  (typecase lst
+    (cons  (1+ (apply 'max (mapcar 'depth lst))))
+    (null 1)
+    (otherwise 0)))
+
+;;1.30 Definir las funciones SUST1 y SUST2 que reciban como
+;;argumentos una lista de asociación y una expresión simbólica L.
+;;SUST1 debe sustituir en L los primeros elementos de las parejas
+;;de la lista de asociación por sus correspondientes segundos
+;;elementos; esta sustitución la hará de forma secuencial (una
+;;sustitución puede influir en el resultado de otra sustitución
+;;anterior). SUST2 opera de forma análoga pero todas las
+;;sustituciones en la lista L deben realizarse simultáneamente (no
+;;teniendo ninguna influencia el resultado de una sustitución en las
+;;sustituciones que se realicen posteriormente).
+;;Ejemplo:
+;;> (SUST1 ‘( (A B) (C D) (E F) (B K) (D L) ) ‘(A C E B D M))
+;;(K L F K L M)
+;;> (SUST2 ‘( (A B) (C D) (E F) (B K) (D L) ) ‘(A C E B D M))
+;;(B D F K L M)
+
+(defun get-val (a-lst key)
+  (let ((res (cadr (assoc key a-lst))))
+    (or res key)))
+
+(defun get-val-seq (a-lst key) 
+  (if a-lst
+    (get-val-seq (cdr a-lst) (get-val a-lst key))
+    key))
+
+(defun sust1 (a-lst lst)
+  (mapcar (lambda (i) (get-val-seq a-lst i)) lst))
+
+(defun sust2 (a-lst lst)
+  (mapcar (lambda (i) (get-val a-lst i)) lst))
+
+;;1.31 Definir una función recursiva AGRUPAR que reciba dos
+;;argumentos, compruebe cuál de ellos es un átomo y cuál una lista,
+;;y a continuación introduzca el átomo junto a los átomos iguales
+;;que hubiera en la lista o al final de la misma, en el caso de no
+;;encontrar semejantes.
+;;86 APÉNDICE: EJERCICIOS DE PROGRAMACIÓN
+;;Por ejemplo:
+;;> (AGRUPAR ‘(A A A B B B C C C) ‘B)
+;;(A A A B B B B C C C )
+
+(defun agrupar (x y)
+  (typecase x
+    (atom (and listp y (agrupar y x)))
+    (cons (let ((h (car x))
+                (t ( cdr x)))
+            (if (eq h y) (cons y x)
+              (cons h (agrupar t y)))))
+    (otherwise (list y))))
