@@ -371,9 +371,243 @@
 
 (defun agrupar (x y)
   (typecase x
-    (atom (and listp y (agrupar y x)))
+    (null (list y))
+    (atom (and (listp y) (agrupar y x)))
     (cons (let ((h (car x))
-                (t ( cdr x)))
-            (if (eq h y) (cons y x)
-              (cons h (agrupar t y)))))
-    (otherwise (list y))))
+                (tl  (cdr x)))
+            (if (equal h y) (cons y x)
+              (cons h (agrupar tl y)))))
+    (otherwise nil)))
+
+;;1.32 Construir de forma recursiva e iterativa la función de
+;;Fibonacci, sabiendo que:
+;;F(0) = 1
+;;F(1) = 1
+;;F(n) = F(n-1) + F(n-2) si n>1
+
+(defun fibo.rec (n)
+  (cond ((= n 0) 0)
+        ((= n 1) 1)
+        ((> n 1) (+ (fibo.rec (- n 1))
+                    (fibo.rec (- n 2))))))
+
+(defun fibo.iter (n)
+  (do* ((a 1 (+ a b))
+        (b 0 a)
+       (cont n (1- cont)))
+      ((zerop cont) a)))
+
+;;1.33 Definir una función APLANAR que reciba como argumento
+;;una expresión simbólica y elimine todos los paréntesis que
+;;aparezcan en esa expresión, devolviendo como resultado una lista
+;;con todos los átomos que aparezcan en el argumento.
+
+;;Ejemplo:
+;;> (APLANAR ‘( (1 2 3) (9 (2 3 4) ) ( ( ( ( 3 4 ( 7 ) ) ) ) ) ) )
+;;( 1 2 3 9 2 3 4 3 4 7 )
+
+(defun aplanar (lst)
+  (when (consp lst)
+    (let ((h (car lst)) (tl (cdr lst)))
+      (append  (if (consp h) (aplanar h)
+                 (list h))
+               (aplanar tl)))))
+
+(defun aplanar2 (x)
+  (if (consp x)
+      (apply #'append (mapcar #'aplanar2 x))
+    (list x)))
+
+;;1.34 Usando la función MAPCAR, definir PRESENTP, un
+;;procedimiento que determine si un átomo particular existe en una
+;;expresión, teniendo en cuenta los elementos de las listas anidadas.
+
+(defun presentp (a lst)
+  (mapcar (lambda (i)
+            (if (atom i) (equal a i)
+              (presentp a i))) lst))
+
+;;1.35 Definir una función que reciba como argumento una lista de
+;;números y devuelva otra lista cuyos elementos sean los cuadrados
+;;de los anteriores.
+
+(defun cuadrados (lst) (mapcar (lambda (x) (expt x 2)) lst))
+
+;;1.36 Definir una función que devuelva verdadero (cualquier valor
+;;distinto de NIL) o falso (NIL) dependiendo de si el menor de sus
+;;argumentos sea par o impar. Resolverlo para dos argumentos y
+;;para un número variable de éstos.
+
+(defun menor-es-par.2 (x y)
+  (evenp (min x y)))
+
+(defun menor-es-par (&rest lst)
+  (evenp (apply #'min lst)))
+
+;;1.37 Definir una función que compruebe si un número variable de
+;;listas tienen el mismo número de elementos.
+
+(defun misma-longitud (&rest lsts)
+  (apply #'= (mapcar  #'length lsts)))
+
+;;1.38 Definir una función que al aplicarla a un número variable de
+;;números cree una lista con todos aquellos números que sean
+;;múltiplos de 3.
+
+(defun filtrar-multiplos-3 (&rest nums)
+  (remove-if (lambda (n) (/= (mod n 3) 0)) nums))
+
+;;1.39 Definir una función que concatene un número variable de
+;;listas, comprobando que los argumentos que recibe son listas y
+;;excluyendo todos las listas que estén vacías.
+
+(defun concat.builtin (&rest lsts)
+  (if (some #'atom lsts) (print "Existe algun atomo")
+    (apply #'append lsts)))
+
+(defun concat (&rest xs)
+  (let ((f (car xs))
+        (r (cdr xs)))
+    (if  f
+        (cons (car f)
+              (apply #'concat (cons (cdr f) r)))
+      (when r (apply #'concat r)))))
+
+;;1.40 Definir la función SUMA que, tomando dos argumentos
+;;numéricos devuelva su suma.
+;;Definir la función SUMA-VARIOS con un número variable de
+;;argumentos, utilizando la función SUMA definida anteriormente.
+;;Deberá devolverse NIL si alguno de los argumentos no es
+;;numérico.
+
+(defun suma (x y) (+ x y))
+
+(defun suma-varios (&rest nums)
+  (reduce #'suma nums))
+
+;;1.41 Definir una función que añada un átomo a una lista que se le
+;;pasan como argumentos a la función.
+;;
+;;Modificar la función anterior de forma que el átomo que se le
+;;pasa como argumento sea opcional. En caso de que no se
+;;especifique en la llamada el átomo, se añadirá a la lista un átomo
+;;cualquiera.
+;;
+;;Modificar la función anterior de forma que pueda añadirse un
+;;número variable de átomos a la lista que se le pasa como
+;;argumento.
+
+(defun mycons (lst a) (cons a lst))
+
+(defun mycons.1 (lst &optional (a 'default))
+  (cons a lst))
+
+(defun mycons.2 (lst &rest as)
+  (append as lst))
+
+;;1.42 Definir una función que tome como argumentos una lista y
+;;un número variable de átomos y devuelva una lista con los
+;;resultados de aplicar la función MEMBER con cada uno de los
+;;átomos y la lista.
+;;Modificar la función anterior de forma que devuelva NIL si
+;;alguno de los átomos no es miembro de la lista. En caso contrario,
+;;el resultado de aplicar MEMBER al último átomo.
+
+(defun members (lst &rest ats)
+  (mapcar (lambda (a) (member a lst)) ats))
+
+(defun members.1 (lst &rest ats)
+  (reduce (lambda (p a) (when p (member a lst))) ats))
+
+(defun members.2 (lst &rest ats)
+  (dolist (a ats res)
+    (setf res (member a lst))
+    (unless res (return res))))
+
+;;1.43 Definir una macro MI-IF que reciba tres argumentos, siendo
+;;el tercero opcional; si el primero es cierto devuelve el segundo, si
+;;no devuelve el tercero o NIL si éste no existiera.
+
+(defmacro si (pred body &optional else)
+  `(cond (,pred ,body)
+         (:else ,else)))
+
+;;1.44 Además de IF, Common LISP incorpora las primitivas
+;;WHEN y UNLESS definidas como sigue:
+;;(WHEN <cond> <cuerpo>) = (COND ( <cond> <cuerpo>)
+;;(UNLESS <cond> <cuerpo>) =
+;;(COND ((NOT <cond>) <cuerpo>))
+;;Definir las macros MI-WHEN y MI-UNLESS, de forma que
+;;realicen las misma funciones que las versiones que incorpora
+;;COMMON LISP.
+
+(defmacro cuando (pred body)
+  `(cond (,pred ,body)))
+
+(defmacro si-no (pred body)
+  `(cond ((not ,pred) ,body)))
+
+;;1.45 Definir una macro MI-DO que tenga exactamente la misma
+;;funcionalidad que la macro DO, pero que además de devolver el
+;;valor correspondiente cuando se cumpla la condición de
+;;finalización, devuelva un segundo valor que indique el número de
+;;iteraciones que se han realizado. No se deben utilizar las
+;;primitivas DO, DO*, DOLIST, DOTIMES.
+
+(defmacro iterar (steps (finp res) &body body)
+  `(labels ((main ,(mapcar #'car steps)
+                  (if ,finp ,res
+                    (progn ,body
+                           (main ,@(apply #'append
+                                          (mapcar #'last steps)))))))
+     (main ,@(mapcar #'cadr steps))))
+
+(defmacro iterar.con.contador (steps (finp res) &body body)
+  (let ((c (gensym "counter")))
+    `(iterar ,(cons `(,c 0 (1+ ,c)) steps)
+             (,finp (values ,res ,c))
+             ,body)))
+
+(defun suma.2 (x y)
+  (iterar.con.contador ((total x (1+ total))
+       (cont y (1- cont)))
+      ((zerop cont) total)
+    (print total) (print cont)))
+
+;;1.46 Definir mediante una macro una función iterativa que realice
+;;algo (el cuerpo) un número de veces. Suponer que la llamada a la
+;;función se hace de la siguiente forma:
+;;(DOTIMES ( <var> <cont> <result> ) <cuerpo>)
+;;donde var es una variable que va a contar el número de
+;;iteraciones que se han realizado, su valor inicial será cero y se irá
+;;incrementando hasta que valga el valor dado en cont. Al final,
+;;después de haber realizado cont veces el cuerpo se devolverá el
+;;valor almacenado en result.
+
+(defmacro hacer-n-veces ((i max &optional res) &body body)
+  `(do ((,i 0 (1+ ,i)))
+       ((>= ,i ,max) ,res)
+     ,@body))
+
+;;1.47 Definir DOWHILE, una macro de dos argumentos que
+;;evalúa ambos hasta que el primero es NIL.
+;;   (DOWHILE <cond> <cuerpo>)
+
+(defmacro hacer-mientras (pred &body body)
+  `(do () (,pred ()) ,@body))
+
+;;1.48 No todos los sistemas de LISP implementan el mecanismo
+;;Backquote. Definir BACKQUOTE de forma que tenga el mismo
+;;efecto que Backquote y permita manejar de forma apropiada
+;;expresiones como COMA y COMA-AT de la forma que se
+;;muestra en el siguiente ejemplo:
+;;> (BACKQUOTE (A B (LIST ‘C ‘D) (COMA (LIST ‘E ‘F)
+;;                               (COMA-AT (LIST ‘G ‘H)))
+;;(A B (LIST ‘C ‘D) (E F) G H)
+
+(defmacro backquote (&rest forms)
+  (labels ((step (case (car l)
+                    ('comma (cadr l))
+                    ('comma-at (cadr l))
+                    (t (list 'quote l)))))
+    (step (car forms))))
